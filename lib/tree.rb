@@ -878,7 +878,21 @@ module Tree
       parent.children.at(myidx - 1) if myidx && myidx > 0
     end
 
+    # @!endgroup
 
+    # Provides a comparision operation for the nodes.
+    #
+    # Comparision is based on the natural ordering of the node name objects.
+    #
+    # @param [Tree::TreeNode] other The other node to compare against.
+    #
+    # @return [Integer] +1 if this node is a 'successor', 0 if equal and -1 if
+    #                   this node is a 'predecessor'. Returns 'nil' if the other
+    #                   object is not a 'Tree::TreeNode'.
+    def <=>(other)
+      return nil if other == nil || other.class != Tree::TreeNode
+      self.name <=> other.name
+    end
 
     # Pretty prints the (sub)tree rooted at this node.
     #
