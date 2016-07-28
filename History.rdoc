@@ -95,10 +95,6 @@ This is a feature and bug-fix release.
 * The Binary tree now supports +inorder+ traversal via the
   {Tree::BinaryTreeNode#inordered_each} method.
 
-* Ability to merge in another tree at a chosen node, or merge two trees to
-  create a third tree. Thanks to {https://github.com/dazoakley Darren Oakley}
-  for this ({https://github.com/evolve75/RubyTree/pull/2 pull request #2})
-
 * RubyTree now mixes in the {http://ruby-doc.org/core-1.8.7/Comparable.html
   Comparable} module.
 
