@@ -8,12 +8,6 @@
 
 **This is a modified version without the feature to use unique names for tree nodes. It does not have merge features neither**
 
-[![Gem Version](https://badge.fury.io/rb/rubytree.png)](http://badge.fury.io/rb/rubytree)
-[![Travis Build Status](https://secure.travis-ci.org/evolve75/RubyTree.png)](http://travis-ci.org/evolve75/rubytree)
-[![Dependency Status](https://gemnasium.com/evolve75/RubyTree.png)](https://gemnasium.com/evolve75/RubyTree)
-[![Code Climate](https://codeclimate.com/github/evolve75/RubyTree.png)](https://codeclimate.com/github/evolve75/RubyTree)
-[![Coverage Status](https://coveralls.io/repos/evolve75/RubyTree/badge.png)](https://coveralls.io/r/evolve75/RubyTree)
-
 ## DESCRIPTION: ##
 
 **RubyTree** is a pure Ruby implementation of the generic
