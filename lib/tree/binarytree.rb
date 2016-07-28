@@ -205,7 +205,6 @@ module Tree
                           unless (0..1).include? at_index
 
       @children[at_index]        = child
-      @children_hash[child.name] = child if child # Assign the name mapping
       child.parent               = self if child
       child
     end

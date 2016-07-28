@@ -6,6 +6,8 @@
 -->
 # **RubyTree** #
 
+**This is a modified version without the feature to use unique names for tree nodes. It does not have merge features neither**
+
 [![Gem Version](https://badge.fury.io/rb/rubytree.png)](http://badge.fury.io/rb/rubytree)
 [![Travis Build Status](https://secure.travis-ci.org/evolve75/RubyTree.png)](http://travis-ci.org/evolve75/rubytree)
 [![Dependency Status](https://gemnasium.com/evolve75/RubyTree.png)](https://gemnasium.com/evolve75/RubyTree)

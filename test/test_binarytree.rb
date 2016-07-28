@@ -93,7 +93,7 @@ module TestTree
 
       assert_equal(Tree::BinaryTreeNode, tree2.class)
       assert_equal("Content!" , tree2.content)
-      assert_equal("More content", tree2[:C][:D].content)
+      assert_equal("More content", tree2[1][0].content)
     end
 
     def test_add_from_hash
@@ -120,7 +120,7 @@ module TestTree
       assert_equal(2, added.count)
       assert_equal(5, root.size)
       assert_equal(root.children.count, 2)
-      assert_equal("leaf", root[:B][:D].content)
+      assert_equal("leaf", root[1][1].content)
 
       # Can't add more than two children
       assert_raise(ArgumentError) { root.add_from_hash({:X => {}}) }

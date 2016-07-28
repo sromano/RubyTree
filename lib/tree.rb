@@ -90,7 +90,6 @@ module Tree
     include Tree::Utils::TreePathHandler
     include Tree::Utils::CamelCaseMethodHandler
     include Tree::Utils::JSONConverter
-    include Tree::Utils::TreeMergeHandler
     include Tree::Utils::HashConverter
 
     # @!group Core Attributes
@@ -226,7 +225,6 @@ module Tree
       end
 
       self.set_as_root!
-      @children_hash = Hash.new
       @children = []
     end
 
@@ -386,13 +384,12 @@ module Tree
             "Attempting add node to itself" if self.equal?(child)
       raise ArgumentError,
             "Attempting add root as a child" if child.equal?(root)
-
-      # Lazy mans unique test, won't test if children of child are unique in
-      # this tree too.
-      raise "Child #{child.name} already added!"\
-            if @children_hash.include?(child.name)
+      #Only one level, laxy
+      raise RuntimeError,
+            "Attempting to add existing child" if @children.include?(child)
 
       child.parent.remove! child if child.parent # Detach from the old parent
+
 
       if insertion_range.include?(at_index)
         @children.insert(at_index, child)
@@ -403,7 +400,6 @@ module Tree
               "#{insertion_range.min} to #{insertion_range.max} exist."
       end
 
-      @children_hash[child.name]  = child
       child.parent = self
       return child
     end
@@ -425,29 +421,8 @@ module Tree
     # @return [Object] The old name
     def rename(new_name)
       old_name = @name
-
-      if is_root?
-        self.name=(new_name)
-      else
-        @parent.rename_child old_name, new_name
-      end
-
+      self.name=(new_name)
       old_name
-    end
-
-    # Renames the specified child node
-    #
-    # @param [Object] old_name old Name of the node. Conventional usage is to
-    #                     pass a String (Integer names may cause *surprises*)
-    #
-    # @param [Object] new_name new Name of the node. Conventional usage is to
-    #   pass a String (Integer names may cause *surprises*)
-    def rename_child(old_name, new_name)
-      raise ArgumentError, "Invalid child name specified: #{old_name}"\
-            unless @children_hash.has_key?(old_name)
-
-      @children_hash[new_name] = @children_hash.delete(old_name)
-      @children_hash[new_name].name=(new_name)
     end
 
     # Protected method to set the name of this node.
@@ -501,7 +476,6 @@ module Tree
     def remove!(child)
       return nil unless child
 
-      @children_hash.delete(child.name)
       @children.delete(child)
       child.set_as_root!
       child
@@ -544,7 +518,6 @@ module Tree
     def remove_all!
       @children.each { |child| child.set_as_root! }
 
-      @children_hash.clear
       @children.clear
       self
     end
@@ -603,19 +576,11 @@ module Tree
     #
     # @see #add
     # @see #initialize
-    def [](name_or_index, num_as_name=false)
+    def [](name_or_index)
       raise ArgumentError,
             "Name_or_index needs to be provided!" if name_or_index == nil
 
-      if name_or_index.kind_of?(Integer) and not num_as_name
-        @children[name_or_index]
-      else
-        if num_as_name and not name_or_index.kind_of?(Integer)
-          warn StandardWarning,
-             "Redundant use of the `num_as_name` flag for non-integer node name"
-        end
-        @children_hash[name_or_index]
-      end
+      @children[name_or_index]
     end
 
     # Traverses each node (including this node) of the (sub)tree rooted at this
@@ -913,21 +878,7 @@ module Tree
       parent.children.at(myidx - 1) if myidx && myidx > 0
     end
 
-    # @!endgroup
 
-    # Provides a comparision operation for the nodes.
-    #
-    # Comparision is based on the natural ordering of the node name objects.
-    #
-    # @param [Tree::TreeNode] other The other node to compare against.
-    #
-    # @return [Integer] +1 if this node is a 'successor', 0 if equal and -1 if
-    #                   this node is a 'predecessor'. Returns 'nil' if the other
-    #                   object is not a 'Tree::TreeNode'.
-    def <=>(other)
-      return nil if other == nil || other.class != Tree::TreeNode
-      self.name <=> other.name
-    end
 
     # Pretty prints the (sub)tree rooted at this node.
     #

@@ -154,14 +154,14 @@ module TestTree
       assert_equal("Root content", tree.content)
       assert_equal(3, tree.children.count) # B, C, D
 
-      leaf_with_content = tree[:B][:F][:I]
+      leaf_with_content = tree[0][1][1]
       assert_equal("Leaf content", leaf_with_content.content)
       assert_equal(true, leaf_with_content.is_leaf?)
 
-      leaf_without_content = tree[:C]
+      leaf_without_content = tree[1]
       assert_equal(true, leaf_without_content.is_leaf?)
 
-      interior_node = tree[:B][:F]
+      interior_node = tree[0][1]
       assert_equal(false, interior_node.is_leaf?)
       assert_equal(2, interior_node.children.count)
 
@@ -206,14 +206,14 @@ module TestTree
       assert_equal("Root content", tree.content)
       assert_equal(3, tree.children.count) # B, C, D
 
-      leaf_with_content = tree[:B][:F][:I]
+      leaf_with_content = tree[0][1][1]
       assert_equal("Leaf content", leaf_with_content.content)
       assert_equal(true, leaf_with_content.is_leaf?)
 
-      leaf_without_content = tree[:C]
+      leaf_without_content = tree[1]
       assert_equal(true, leaf_without_content.is_leaf?)
 
-      interior_node = tree[:B][:F]
+      interior_node = tree[0][1]
       assert_equal(false, interior_node.is_leaf?)
       assert_equal(2, interior_node.children.count)
     end
@@ -239,10 +239,10 @@ module TestTree
       assert_equal(Array, added_children.class)
       assert_equal(2, added_children.count)
       assert_equal(7, tree.size)
-      assert_equal("G content", tree[:G].content)
-      assert_equal(true, tree[:G].is_leaf?)
-      assert_equal(5, tree[:B].size)
-      assert_equal(3, tree[:B].children.count)
+      assert_equal("G content", tree[1].content)
+      assert_equal(true, tree[1].is_leaf?)
+      assert_equal(5, tree[0].size)
+      assert_equal(3, tree[0].children.count)
 
       assert_raise (ArgumentError) { tree.add_from_hash([]) }
       assert_raise (ArgumentError) { tree.add_from_hash("not a hash") }
@@ -317,19 +317,19 @@ module TestTree
       second_node = Tree::TreeNode.new(2)
 
       assert_nil(first_node <=> nil)
-      assert_equal(-1, first_node <=> second_node)
+      assert_equal(nil, first_node <=> second_node)
 
       second_node = Tree::TreeNode.new(1)
-      assert_equal(0, first_node <=> second_node)
+      assert_equal(nil, first_node <=> second_node)
 
       first_node  = Tree::TreeNode.new("ABC")
       second_node = Tree::TreeNode.new("XYZ")
 
       assert_nil(first_node <=> nil)
-      assert_equal(-1, first_node <=> second_node)
+      assert_equal(nil, first_node <=> second_node)
 
       second_node = Tree::TreeNode.new("ABC")
-      assert_equal(0, first_node <=> second_node)
+      assert_equal(nil, first_node <=> second_node)
 
       StandardWarning.enable
     end
@@ -340,16 +340,8 @@ module TestTree
       nodeB = Tree::TreeNode.new("NodeB", "Some Content")
       nodeC = Tree::TreeNode.new("NodeC", "Some Content")
 
-      # Check if the nodes compare correctly
-      assert(nodeA <  nodeB, "Node A is lexically 'less than' node B")
-      assert(nodeA <= nodeB, "Node A is lexically 'less than' node B")
-      assert(nodeB >  nodeA, "Node B is lexically 'greater than' node A")
-      assert(nodeB >= nodeA, "Node B is lexically 'greater than' node A")
 
       assert(!(nodeA == nodeB), "Node A and Node B are not equal")
-      assert(nodeB.between?(nodeA, nodeC), "Node B is lexically between node A and node C")
-
-
     end
 
     # Test the to_s method.  This is probably a little fragile right now.
@@ -535,8 +527,8 @@ module TestTree
       deep = Tree::TreeNode.new("deep")
 
       root << one << deep
-      # The same child cannot be added under any circumstance
-      assert_raise(RuntimeError) { root.add(Tree::TreeNode.new(one.name)) }
+      # The same child name can be added now
+      root.add(Tree::TreeNode.new(one.name))
       assert_raise(RuntimeError) { root.add(one) }
 
       begin
@@ -635,14 +627,15 @@ module TestTree
       @root.replace!(@child2, @child4)
 
       # Also test replacing with a node of the same name
-      @root.replace! @child4, @child4.detached_copy
+      copy = @child4.detached_copy
+      @root.replace! @child4, copy
 
       assert_equal(4, @root.size, "Should have three nodes")
       assert(@root.children.include?(@child1), "Should parent child1")
       assert(!@root.children.include?(@child2), "Should not parent child2")
       assert(@root.children.include?(@child3), "Should parent child3")
-      assert(@root.children.include?(@child4), "Should parent child4")
-      assert_equal(1, @root.children.find_index(@child4), "Should add child4 to index 1")
+      assert(@root.children.include?(copy), "Should parent child4")
+      assert_equal(1, @root.children.find_index(copy), "Should add child4 to index 1")
     end
 
     def test_replace_with
@@ -864,7 +857,6 @@ module TestTree
 
       assert_equal(@child1, @root[0], "Should be the first child")
       assert_equal(@child4, @root[2][0], "Should be the grandchild")
-      assert_nil(@root["TEST"], "Should be nil")
       assert_nil(@root[99], "Should be nil")
       assert_raise(ArgumentError) { @root[nil] }
     end
@@ -897,22 +889,18 @@ module TestTree
       assert(new_root.has_children?, "Must have a child node")
 
       # Test the child node
-      new_child = new_root[test_child.name]
-      assert_equal(test_child.name, new_child.name, "Must have child 1")
-      assert(new_child.has_content?, "Child must have content")
-      assert(new_child.is_only_child?, "Child must be the only child")
+      assert(test_child.has_content?, "Child must have content")
+      assert(test_child.is_only_child?, "Child must be the only child")
 
-      new_child_content = new_child.content
+      new_child_content = test_child.content
       assert_equal(Hash, new_child_content.class, "Class of child's content should be a hash")
       assert_equal(test_child.content.size, new_child_content.size, "The content should have same size")
 
       # Test the grand-child node
-      new_grand_child = new_child[test_grand_child.name]
-      assert_equal(test_grand_child.name, new_grand_child.name, "Must have grand child")
-      assert(new_grand_child.has_content?, "Grand-child must have content")
-      assert(new_grand_child.is_only_child?, "Grand-child must be the only child")
+      assert(test_grand_child.has_content?, "Grand-child must have content")
+      assert(test_grand_child.is_only_child?, "Grand-child must be the only child")
 
-      new_grand_child_content = new_grand_child.content
+      new_grand_child_content = test_grand_child.content
       assert_equal(Array, new_grand_child_content.class, "Class of grand-child's content should be an Array")
       assert_equal(test_grand_child.content.size, new_grand_child_content.size, "The content should have same size")
     end
@@ -1286,10 +1274,10 @@ module TestTree
       @root << @child1
       @root << @child2
       @root << @child3 << @child4
-      assert_not_nil(@root['Child1'], "Child 1 should have been added to Root")
-      assert_not_nil(@root['Child2'], "Child 2 should have been added to Root")
-      assert_not_nil(@root['Child3'], "Child 3 should have been added to Root")
-      assert_not_nil(@child3['Child4'], "Child 4 should have been added to Child3")
+      assert_not_nil(@root[0], "Child 1 should have been added to Root")
+      assert_not_nil(@root[1], "Child 2 should have been added to Root")
+      assert_not_nil(@root[2], "Child 3 should have been added to Root")
+      assert_not_nil(@child3[0], "Child 4 should have been added to Child3")
     end
 
     # Test the [] method.
@@ -1298,16 +1286,13 @@ module TestTree
 
       @root << @child1
       @root << @child2
-      assert_equal(@child1.name, @root['Child1'].name, "Child 1 should be returned")
       assert_equal(@child1.name, @root[0].name, "Child 1 should be returned")
       assert_equal(@child1.name, @root[-2].name, "Child 1 should be returned") # Negative access also works
       assert_equal(@child1.name, @root[-(@root.children.size)].name, "Child 1 should be returned") # Negative access also works
 
-      assert_equal(@child2.name, @root['Child2'].name, "Child 2 should be returned")
       assert_equal(@child2.name, @root[1].name, "Child 2 should be returned")
       assert_equal(@child2.name, @root[-1].name, "Child 2 should be returned") # Negative access also works
 
-      assert_nil(@root['Some Random Name'], "Should return nil")
       assert_nil(@root[99], "Should return nil")
       assert_nil(@root[-(@root.children.size+1)], "Should return nil")
       assert_nil(@root[-3], "Should return nil")
@@ -1434,36 +1419,6 @@ module TestTree
 
     end
 
-    # Test usage of integers as node names
-    def test_integer_node_names
-
-      require 'structured_warnings'
-      assert_warn(StandardWarning) do
-        @n_root = Tree::TreeNode.new(0, "Root Node")
-        @n_child1 = Tree::TreeNode.new(1, "Child Node 1")
-        @n_child2 = Tree::TreeNode.new(2, "Child Node 2")
-        @n_child3 = Tree::TreeNode.new("three", "Child Node 3")
-      end
-
-      @n_root << @n_child1
-      @n_root << @n_child2
-      @n_root << @n_child3
-
-      # Node[n] is really accessing the nth child with a zero-base
-      assert_not_equal(@n_root[1].name, 1) # This is really the second child
-      assert_equal(@n_root[0].name, 1)     # This will work, as it is the first child
-      assert_equal(@n_root[1, true].name, 1)     # This will work, as the flag is now enabled
-
-      # Sanity check for the "normal" string name cases. Both cases should work.
-      assert_equal(@n_root["three", false].name, "three")
-
-      StandardWarning.disable
-      assert_equal(@n_root["three", true].name, "three")
-
-      # Also ensure that the warning is actually being thrown
-      StandardWarning.enable
-      assert_warn(StandardWarning) {assert_equal(@n_root["three", true].name, "three") }
-    end
 
     # Test the addition of a node to itself as a child
     def test_add_node_to_self_as_child
@@ -1520,70 +1475,15 @@ module TestTree
       #
       @other_tree = @root.detached_copy
       @other_tree << @child1.detached_copy
-      @other_tree["Child1"] << Tree::TreeNode.new("Child1a", "GrandChild Node 1a")
-      @other_tree["Child1"] << Tree::TreeNode.new("Child1b", "GrandChild Node 1b")
+      @other_tree[0] << Tree::TreeNode.new("Child1a", "GrandChild Node 1a")
+      @other_tree[0] << Tree::TreeNode.new("Child1b", "GrandChild Node 1b")
       @other_tree << @child3.detached_copy
-      @other_tree["Child3"] << Tree::TreeNode.new("Child3a", "GrandChild Node 3a")
-      @other_tree["Child3"]["Child3a"] << Tree::TreeNode.new("Child3a1", "GreatGrandChild Node 3a1")
+      @other_tree[1] << Tree::TreeNode.new("Child3a", "GrandChild Node 3a")
+      @other_tree[1][0] << Tree::TreeNode.new("Child3a1", "GreatGrandChild Node 3a1")
 
       # And another (different) one so we can test exceptions...
       @other_tree2 = Tree::TreeNode.new("ROOTIE", "A different root")
       @other_tree2 << Tree::TreeNode.new("new_child1", "New Child 1")
-    end
-
-    # Test tree merging.
-    def test_merge
-      setup_test_tree
-      setup_other_test_tree
-
-      merged_tree = @root.merge(@other_tree)
-
-      # puts "\n\ntest_merge:\n\n"
-      # @root.print_tree
-      # puts "\n"
-      # @other_tree.print_tree
-      # puts "\n"
-      # merged_tree.print_tree
-
-      assert( @root["Child1"]["Child1a"].nil?, ".merge() has altered self." )
-      assert( @root["Child1"]["Child1b"].nil?, ".merge() has altered self." )
-      assert( @root["Child3"]["Child3a"].nil?, ".merge() has altered self." )
-      assert( merged_tree.is_a?(Tree::TreeNode) )
-      assert( !merged_tree["Child1"]["Child1a"].nil?, ".merge() has not included ['Child1']['Child1a'] from other_tree." )
-      assert( !merged_tree["Child1"]["Child1b"].nil?, ".merge() has not included ['Child1']['Child1b'] from other_tree." )
-      assert( !merged_tree["Child3"]["Child3a"].nil?, ".merge() has not included ['Child3']['Child3a'] from other_tree." )
-      assert( !merged_tree["Child2"].nil?, ".merge() has not included ['Child2'] from self." )
-      assert( !merged_tree["Child3"]["Child3a"]["Child3a1"].nil?, ".merge() has not included ['Child3']['Child3a']['Child3a1'] from other_tree." )
-      assert( !merged_tree["Child3"]["Child4"].nil?, ".merge() has not included ['Child3']['Child4'] from self." )
-
-      assert_raise(ArgumentError) { @root.merge(@other_tree2) }
-      assert_raise(TypeError) { @root.merge('ROOT') }
-    end
-
-    # Test tree merging.
-    def test_merge_bang
-      setup_test_tree
-      setup_other_test_tree
-
-      # puts "\n\ntest_merge_bang:\n\n"
-      # @root.print_tree
-      # puts "\n"
-      # @other_tree.print_tree
-
-      @root.merge!(@other_tree)
-
-      # puts "\n"
-      # @root.print_tree
-
-      assert( !@root["Child1"]["Child1a"].nil?, ".merge() has not included ['Child1']['Child1a'] from other_tree." )
-      assert( !@root["Child1"]["Child1b"].nil?, ".merge() has not included ['Child1']['Child1b'] from other_tree." )
-      assert( !@root["Child3"]["Child3a"].nil?, ".merge() has not included ['Child3']['Child3a'] from other_tree." )
-      assert( !@root["Child2"].nil?, ".merge() has not included ['Child2'] from self." )
-      assert( !@root["Child3"]["Child3a"]["Child3a1"].nil?, ".merge() has not included ['Child3']['Child3a']['Child3a1'] from other_tree." )
-      assert( !@root["Child3"]["Child4"].nil?, ".merge() has not included ['Child3']['Child4'] from self." )
-
-      assert_raise(ArgumentError) { @root.merge!(@other_tree2) }
-      assert_raise(TypeError) { @root.merge!('ROOT') }
     end
 
     def test_name_accessor
@@ -1601,17 +1501,16 @@ module TestTree
 
       @child1.rename 'ALT_Child1'
       assert_equal('ALT_Child1', @child1.name, "Name should be 'ALT_Child1'")
-      assert_equal(@child1, @root['ALT_Child1'], 'Should be able to access from parent using new name')
+      assert_equal(@child1.name, @root[0].name,  "Name should be 'ALT_Child1' from parent")
     end
 
     def test_rename_child
       setup_test_tree
 
-      assert_raise(ArgumentError) {@root.rename_child('Not_Present_Child1', 'ALT_Child1')}
 
-      @root.rename_child('Child1', 'ALT_Child1')
+      @root[0].rename('ALT_Child1')
       assert_equal('ALT_Child1', @child1.name, "Name should be 'ALT_Child1'")
-      assert_equal(@child1, @root['ALT_Child1'], 'Should be able to access from parent using new name')
+      assert_equal(@child1.name, @root[0].name, "Name should be 'ALT_Child1' from parent")
 
     end
 
@@ -1622,13 +1521,13 @@ module TestTree
       assert_equal(0, child_node.node_depth)
 
       root_node << child_node
-      assert_equal(root_node["CHILD"].name, "CHILD")
+      assert_equal(root_node[0].name, "CHILD")
       assert_equal(0, root_node.node_depth)
       assert_equal(1, child_node.node_depth)
 
       grandchild_node = Tree::TreeNode.new("GRANDCHILD")
       child_node << grandchild_node
-      assert_equal(root_node["CHILD"]["GRANDCHILD"].name, "GRANDCHILD")
+      assert_equal(root_node[0][0].name, "GRANDCHILD")
       assert_equal(0, root_node.node_depth)
       assert_equal(1, child_node.node_depth)
       assert_equal(2, grandchild_node.node_depth)
@@ -1638,7 +1537,7 @@ module TestTree
 
       # Move the grand child to a new root.
       root2_node << grandchild_node
-      assert_equal(root2_node["GRANDCHILD"].name, "GRANDCHILD")
+      assert_equal(root2_node[0].name, "GRANDCHILD")
       assert_equal(root2_node, grandchild_node.parent)
       assert_equal(1, grandchild_node.node_depth)
 
@@ -1646,18 +1545,18 @@ module TestTree
       root1 = Tree::TreeNode.new("1")
       root1 << Tree::TreeNode.new("2") << Tree::TreeNode.new("4")
       root1 << Tree::TreeNode.new("3") << Tree::TreeNode.new("5")
-      root1["3"] << Tree::TreeNode.new("6")
-      assert_equal(root1["3"]["6"].name, "6")
+      root1[1] << Tree::TreeNode.new("6")
+      assert_equal(root1[1][1].name, "6")
 
       # Create a new tree
       root2 = root1.dup
-      assert_equal(root1, root2)
+      assert_equal(root1.map(&:name), root2.map(&:name))
       assert_not_same(root1, root2)
 
       # Now 'move' the "4" node to the new tree. This should have 'dup' semantics.
-      root2["3"] << root1["2"]["4"]
-      assert_equal("3", root2["3"]["4"].parent.name) # This is on the new tree
-      assert_nil(root1["2"]["4"])                    # This is on the old tree
+      root2[1] << root1[0][0]
+      assert_equal("3", root2[1][2].parent.name) # This is on the new tree
+      assert_nil(root1[0][0])                    # This is on the old tree
 
     end
 

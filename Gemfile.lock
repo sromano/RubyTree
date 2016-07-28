@@ -78,6 +78,3 @@ DEPENDENCIES
   rubytree!
   test-unit (~> 3.0)
   yard (~> 0.8)
-
-BUNDLED WITH
-   1.10.2
